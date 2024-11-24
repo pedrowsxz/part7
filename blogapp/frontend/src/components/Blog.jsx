@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import PropTypes from "prop-types";
 import storage from "../services/storage";
 
 const Blog = ({ blog, handleVote, handleDelete }) => {
@@ -43,17 +42,6 @@ const Blog = ({ blog, handleVote, handleDelete }) => {
       )}
     </div>
   );
-};
-
-Blog.propTypes = {
-  blog: PropTypes.shape({
-    url: PropTypes.string.isRequired,
-    title: PropTypes.string.isRequired,
-    likes: PropTypes.number.isRequired,
-    user: PropTypes.object,
-  }).isRequired,
-  handleVote: PropTypes.func.isRequired,
-  handleDelete: PropTypes.func.isRequired,
 };
 
 export default Blog;
