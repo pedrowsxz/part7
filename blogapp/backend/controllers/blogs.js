@@ -1,12 +1,13 @@
 const jwt = require('jsonwebtoken')
 const router = require('express').Router()
+const Comment = require('../models/comment')
 const Blog = require('../models/blog')
 const User = require('../models/user')
 const userExtractor = require('../utils/middleware').userExtractor
 
 router.get('/', async (request, response) => {
   const blogs = await Blog
-    .find({}).populate('user', { username: 1, name: 1 })
+    .find({}).populate('user', { username: 1, name: 1 }).populate('comments', { content: 1 })
 
   response.json(blogs)
 })
@@ -68,6 +69,34 @@ router.put('/:id', async (request, response) => {
 
   const updatedBlog = await Blog.findByIdAndUpdate(request.params.id, blog, { new: true }).populate('user', { username: 1, name: 1 })
   response.json(updatedBlog)
+})
+
+
+router.get('/:id/comments', async (request, response) => {
+  const blog = await Blog.findById(request.params.id).populate('comments', { content: 1 })
+
+  console.log(blog)
+  const comments = blog.comments
+
+  response.json(comments)
+})
+
+router.post('/:id/comments', async (request, response) => {
+  const blog = await Blog.findById(request.params.id)
+  const content = request.body.content
+
+  const comment = new Comment({
+      content: content,
+      blog: blog._id
+  })
+
+  comment.blog = blog
+  blog.comments = blog.comments.concat(comment._id)
+
+  await blog.save()
+  
+  const savedComment = await comment.save()
+  response.status(201).json(savedComment)
 })
 
 module.exports = router

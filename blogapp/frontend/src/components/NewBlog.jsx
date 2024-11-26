@@ -28,8 +28,8 @@ const NewBlog = ({ doCreate }) => {
   return (
     <div>
       <h2>Create a New Blog</h2>
-      <form onSubmit={handleSubmit}>
-        <div>
+      <form onSubmit={handleSubmit} className="new-blog-form">
+        <div className="create-new-blog-title">
           <label>Title:</label>
           <input
             type="text"
@@ -38,7 +38,7 @@ const NewBlog = ({ doCreate }) => {
             onChange={handleTitleChange}
           />
         </div>
-        <div>
+        <div className="create-new-blog-url">
           <label>URL:</label>
           <input
             type="text"
@@ -47,7 +47,7 @@ const NewBlog = ({ doCreate }) => {
             onChange={handleUrlChange}
           />
         </div>
-        <div>
+        <div className="create-new-blog-author">
           <label>Author:</label>
           <input
             type="text"
@@ -56,7 +56,7 @@ const NewBlog = ({ doCreate }) => {
             onChange={handleAuthorChange}
           />
         </div>
-        <button type="submit">Create</button>
+        <button type="submit">create</button>
       </form>
     </div>
   );

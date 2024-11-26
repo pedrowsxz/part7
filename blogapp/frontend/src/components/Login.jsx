@@ -12,7 +12,7 @@ const Login = ({ doLogin }) => {
   };
 
   return (
-    <form onSubmit={handleLogin}>
+    <form onSubmit={handleLogin} className="login-form">
       <label>
         Username:
         <input

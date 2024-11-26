@@ -1,24 +1,13 @@
 import { useState, useEffect, createRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
-import loginService from "./services/login";
-import storage from "./services/storage";
-import usersService from "./services/users"
-
 import { setNotification } from "./reducers/notificationReducer";
-import {
-  initializeBlogs,
-  createBlog,
-  likeBlog,
-  removeBlog,
-} from "./reducers/blogsReducer";
+import { initializeBlogs, createBlog, likeBlog, removeBlog } from "./reducers/blogsReducer";
 
 import { loadUserReducer, loginReducer, logoutReducer, setUser } from "./reducers/userReducer"; 
+import { fetchUsers } from "./reducers/usersReducer";
 
-import {
-  BrowserRouter as Router,
-  Routes, Route, Link
-} from 'react-router-dom'
+import { Routes, Route, Link, useMatch, useNavigate, Navigate } from 'react-router-dom'
 
 import Login from "./components/Login";
 import Blog from "./components/Blog";
@@ -27,16 +16,22 @@ import Notification from "./components/Notification";
 import Togglable from "./components/Togglable";
 import Users from "./components/Users";
 import User from "./components/User";
+import Blogs from "./components/Blogs";
 
 const App = () => {
 
   const dispatch = useDispatch();
 
   const user = useSelector((state) => state.user.user)
-
   const blogs = useSelector((state) => state.blogs);
-  
-  const [users, setUsers ] = useState([])
+  const users = useSelector((state) => state.users)
+
+  const match = useMatch('/blogs/:id')
+  const blog = match 
+    ? blogs.find(blog => blog.id === match.params.id)
+    : null
+
+  const navigate = useNavigate()
 
   useEffect(() => {
     dispatch(initializeBlogs());
@@ -47,7 +42,7 @@ const App = () => {
   }, []);
 
   useEffect(() => {
-    usersService.getAllUsers().then(users => setUsers(users))
+    dispatch(fetchUsers())
   }, [])
 
   const blogFormRef = createRef();
@@ -58,8 +53,11 @@ const App = () => {
 
   const handleLogin = async (credentials) => {
     try {
-      dispatch(loginReducer(credentials))
-      notify(`Welcome back, ${user.name}`)
+      const response = await dispatch(loginReducer(credentials))
+      if (loginReducer.fulfilled.match(response)) {
+        const user = response.payload;
+        notify(`Welcome back, ${user.name}`);
+      }
     } catch (error) {
       notify(`Wrong credentials ${error}`, "error");
     }
@@ -85,45 +83,54 @@ const App = () => {
     if (window.confirm(`Remove blog ${blog.title} by ${blog.author}`)) {
       dispatch(removeBlog(blog.id));
       notify(`Blog ${blog.title}, by ${blog.author} removed`);
+      navigate('/')
     }
   };
 
   if (!user) {
     return (
-      <div>
-        <h2>blogs</h2>
+      <div className="login-and-notification-container">
+        <h1>Blogs</h1>
         <Notification />
         <Login doLogin={handleLogin} />
       </div>
     );
   }
 
-  const byLikes = (a, b) => b.likes - a.likes;
-
   return (
-    <Router>
-      <div>
-        <h2>blogs</h2>
+    <div className="page-container">
+      <header>
+        <nav className="navbar">
+          <div>
+            <Link to='/blogs'> blogs </Link>
+            <Link to='users'> users </Link>
+          </div>
+          <div>
+            {user.name} logged in
+            <button onClick={handleLogout} className="logout-button">logout</button> 
+          </div>
+        </nav>
+      </header>
+      <main className="main">
+        <h1>Blogs</h1>
         <Notification />
-        <div>
-          {user.name} logged in
-          <button onClick={handleLogout}>logout</button>
-        </div>
-      </div>
-      <Routes>
-        <Route path="/"
-          element = {
-            <>
-              <Togglable buttonLabel="create new blog" ref={blogFormRef}>
-              <NewBlog doCreate={handleCreate} />
-              </Togglable>
-              {[...blogs].sort(byLikes).map((blog) => (<Blog key={blog.id} blog={blog} handleVote={handleVote} handleDelete={handleDelete} />))}
-            </>
-          } />
-        <Route path="/users" element={<Users users={users} />} />
-        <Route path="/users/:id" element={users.length ? <User users={users} /> : <div>Loading...</div>} />
-      </Routes>
-    </Router>
+        <Routes>
+          <Route path="/"
+            element = {
+              <>
+                <Togglable buttonLabel="create new blog" ref={blogFormRef}>
+                  <NewBlog doCreate={handleCreate} />
+                </Togglable>
+                <Blogs blogs={blogs} />
+              </>
+            } />
+          <Route path="/blogs" element={<Navigate replace to="/" /> } />
+          <Route path="/blogs/:id" element={blogs.length ? <Blog blogFromIdParam={blog} handleVote={handleVote} handleDelete={handleDelete} />: <div>Loading...</div>} />
+          <Route path="/users" element={<Users users={users} />} />
+          <Route path="/users/:id" element={users.length ? <User users={users} /> : <div>Loading...</div>} />
+        </Routes>
+      </main>
+    </div>
   );
 };
 

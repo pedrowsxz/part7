@@ -14,7 +14,7 @@ export const loginReducer = createAsyncThunk('user/login', async (credentials) =
 }) 
 
 export const logoutReducer = createAsyncThunk('user/logout', async () => {
-    storage.removeUser
+    storage.removeUser()
     return null
 })
 
@@ -37,6 +37,9 @@ const userSlice = createSlice({
                 state.error = action.error.message;
             })
 
+            .addCase(loginReducer.pending, (state) => {
+                state.status = 'loading'; 
+            })
             .addCase(loginReducer.fulfilled, (state, action) => {
                 state.status = 'succeeded';
                 state.user = action.payload
